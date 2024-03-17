@@ -1,0 +1,31 @@
+Gateways :
+
+WANGW 195.220.50.1 up (default)
+vpn_gwcomput_noxiris_net 10.42.255.1 up 
+
+
+DNS :
+Google
+8.8.4.4
+
+Interfaces:
+
+wan_univ : 192.220.50.2  gate WANGW
+lan_interface : 192.168.1.1 
+lan_paul interface : 192.168.10.1 
+lan_comput interface : 192.168.42.1
+pia_vpn int : 10.42.255.3  vpn_gwcomput_noxiris_net
+srvpn interface : // 
+lan_server interface : 192.168.2.1
+
+
+Open vpn : 
+vpn_gwcomputnoxiris.com : local@ : 195.220.50.2:42519 vitrual@ : 10.42.255.3
+
+proxy : 
+195.220.50.14 --> server_OPENVPN
+195.220.50.15 --> site web Paul 
+
+
+
+ 

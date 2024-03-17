@@ -1,0 +1,89 @@
+sous les droits administratifs :
+
+Étape 1 : Installer Docker
+Mettre à jour le gestionnaire de paquets :
+
+bash
+Copy code
+sudo apt update
+
+
+Installer les dépendances nécessaires :
+
+bash
+Copy code
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+
+
+Ajouter la clé GPG officielle de Docker :
+
+bash
+Copy code
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+
+Ajouter le dépôt Docker stable :
+
+bash
+Copy code
+echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+
+Installer Docker :
+
+bash
+Copy code
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io
+
+
+Ajouter l'utilisateur au groupe Docker pour éviter l'utilisation de sudo à chaque fois (redémarrez après cette étape) :
+
+bash
+Copy code
+sudo usermod -aG docker $USER
+
+
+Étape 2 : Installer Rancher
+
+
+Démarrez Docker  :
+
+bash
+Copy code
+sudo systemctl start docker
+
+
+
+Installez Rancher en tant que conteneur Docker :
+
+bash
+Copy code
+sudo docker run -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher
+
+
+Accéder à l'interface web de Rancher via le navigateur à l'adresse http://localhost et suivez les instructions pour configurer un mot de passe.
+
+
+Étape 3 : Installer Istio via Rancher
+
+
+Se connecter à l'interface web de Rancher.
+
+Cliquer sur "Add Cluster" et suivre les instructions pour créer un cluster Kubernetes.
+
+Dans le cluster nouvellement créé, cliquer sur "Apps & Marketplace" dans le menu de gauche.
+
+Dans la section "Find Apps", rechercher "Istio" et sélectionnez-le.
+
+Cliquer sur "View Details" pour obtenir plus d'informations sur Istio.
+
+Configurez les options selon vos besoins. Vous devrez spécifier des informations telles que le nom de l'application, le namespace, et d'autres paramètres spécifiques à Istio.
+
+Cliquer sur "Launch" pour déployer Istio dans le cluster.
+
+Attendez que le déploiement soit terminé.  suivre le processus dans la section "Workloads" de Rancher.
+
+Une fois le déploiement terminé, accéder à Istio via le service exposé. trouver l'adresse IP et le port associés dans la section "Services" de Rancher.
+
+Accéder à l'interface Istio via le dashboard de RancherOs.
