@@ -1,0 +1,99 @@
+SETUP SERVER
+Get your latest update for your server with this command:
+
+zypper ref && zypper dup -y
+Also setup /etc/hosts in each server in order to connecting each server with name, so we don’t install dns for lookup each server. Edit /etc/hosts like this:
+
+127.0.0.1 localhost
+192.168.99.101 kube-master.nugi.biz kube-master
+192.168.99.102 kube-worker0.nugi.biz kube-worker0
+INSTALL DOCKER
+Kubernetes need a container runtime to working, i choose Docker to do it. Latest Docker version for openSUSE Leap 15.1 is 19.03.1_ce but latest kubernetes work only with 18.09 below so i decided to downgrade the docker version. I install with this command:
+
+zypper in docker-18.09.6_ce
+Add some line on /etc/docker/daemon.json after { like this:
+
+...
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "storage-driver": "overlay2",
+...
+Restart Docker Service, run command:
+
+systemctl restart docker
+Add Docker Service to automatic running when boot:
+
+systemctl enable docker
+MODPROBE & SYSCTL
+Run modprobe command:
+
+modprobe overlay
+modprobe br_netfilter
+Edit /etc/sysctl.conf:
+
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.forwarding = 1
+net.bridge.bridge-nf-call-iptables = 1
+Run this command to apply:
+
+sysctl -p
+ADD K8S REPOSITORY
+Add newk8s repository, Run command:
+
+zypper addrepo --type yum --gpgcheck-strict --refresh https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64 google-k8s
+Add gpg key for repository, run command:
+
+rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+rpm --import https://packages.cloud.google.com/yum/doc/yum-key.gpg
+Refresh repository, run command:
+
+zypper refresh google-k8s
+INSTALL KUBEADM,KUBECTL & KUBELET
+Install a bundling package to completed your kubernetes cluster:
+
+zypper in kubelet-1.15.4-0 kubernetes-cni kubeadm-1.15.4-0 cri-tools kubectl-1.15.4-0 socat
+Ignoring conntrack breakout, just pick:
+
+Solution 2: break kubelet-1.15.4-0.x86_64 by ignoring some of its dependencies Choose from above solutions by number or skip, retry or cancel [1/2/s/r/c] (c): 2 ...
+
+Solution 3: break kubelet-1.13.3-0.x86_64 by ignoring some of its dependencies Choose from above solutions by number or skip, retry or cancel [1/2/3/s/r/c] (c): 3
+DISABLE SWAP & ENABLE KUBELET SERVICE ON BOOT
+As you know, Kubernetes don’t support swap, we must disable swap manually to install kubernetes.
+
+Check swap with command:
+
+swapon -s
+Disable swap with command:
+
+swapoff -a
+Enable kubelet service on boot:
+
+systemctl enable kubelet
+DO IN MASTER
+After we install kubeadm, we must run an init to get kubernetes cluster, so i run kubeadm init like this:
+
+kubeadm init --pod-network-cidr=10.244.14.0/16
+Run this command to working with kubectl:
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+Watch pods creating process with command:
+
+kubectl get pods --all-namespaces --watch
+Hint: Copy kubeadm join to active a worker
+
+After kubeadm was installed, we must install flannel network to connect each master and worker in kubernetes. I run this command:
+
+wget https://raw.githubusercontent.com/coreos/flannel/m aster/Documentation/kube-flannel.yml
+kubectl apply -f kube-flannel.yml
+Watch pods creating process with command:
+
+kubectl get pods --all-namespaces --watch
+DO IN WORKER
+After install flannel and all services was running, so we move to worker server. In this tutorial, i only have 1 worker. If you have 2 more server, you must do it on all worker server. Run command like this each worker server:
+
+kubeadm join 192.168.99.101:6443 --token x8wb20.f8czwt7sdxbvprdh --discovery-token-ca-cert-hash sha256:5226d23fa710d7ca86443ca52665c5b7d0526aced2985da4b88b3cfdcd0deb97
+After join get to the master and run this command to check the worker is ready:
+
+kubectl get nodes
